@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="16の質問に答えると、6つのチェス駒と序盤・中盤・終盤を組み合わせた18タイプから、あなたの駒がわかる診断です。">
+<meta name="description" content="10の質問に5段階で答えると、6つのチェス駒からあなたのタイプがわかる診断です。駒の性格は2026年の大会棋譜82,329局の集計から。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="あなたは、盤上のどの駒? | チェス駒タイプ診断">
-<meta property="og:description" content="16の質問で、6つの駒×序盤・中盤・終盤の18タイプからあなたの駒と相性のいい駒がわかります。">
+<meta property="og:description" content="10問・1分で、6つのチェス駒からあなたのタイプと相性のいい駒がわかります。駒の性格は大会棋譜82,329局のデータから。">
 <meta property="og:url" content="https://akitashu.github.io/chess-shindan/">
 <meta property="og:image" content="https://akitashu.github.io/chess-shindan/og.png">
 <meta property="og:image:width" content="1200">
@@ -30,61 +30,73 @@ window.track = (name, params) => { if (window.gtag) gtag("event", name, params |
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
-/* Layout: 一列のカード。盤面の市松模様を背景の帯に、質問は1問ずつ、結果は保存しやすい縦長カード */
+/* Layout: 一列。盤面の市松模様の帯、質問は1問ずつ5段階、結果は縦長カード */
 :root{
   --bg:#ece6d6; --surface:#f8f4ea; --fg:#22281f; --muted:#5d6457;
-  --board-dark:#4e6b52; --board-light:#dfe6cf; --accent:#a8742a; --line:#cfc6ae;
+  --board-dark:#4e6b52; --board-light:#dfe6cf; --accent:#a8742a; --line:#cfc6ae; --on-dark:#f4efe2;
   --display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
   --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#161c17; --surface:#1f2820; --fg:#ebe6d8; --muted:#a9ae9f;
-  --board-dark:#33503a; --board-light:#2a3a2d; --accent:#d4a052; --line:#3a4639; color-scheme:dark}}
+  --board-dark:#3d5e45; --board-light:#2a3a2d; --accent:#d4a052; --line:#3a4639; --on-dark:#f4efe2; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#161c17; --surface:#1f2820; --fg:#ebe6d8; --muted:#a9ae9f;
-  --board-dark:#33503a; --board-light:#2a3a2d; --accent:#d4a052; --line:#3a4639; color-scheme:dark}
+  --board-dark:#3d5e45; --board-light:#2a3a2d; --accent:#d4a052; --line:#3a4639; --on-dark:#f4efe2; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.75;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
 .strip{height:28px;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));
   background:repeating-conic-gradient(var(--board-dark) 0 25%,var(--board-light) 0 50%) 0 0/28px 28px}
-main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:24px;padding-top:32px}
-h1,h2,.type-name{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.3}
+main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:22px;padding-top:32px}
+h1,h2,.type-name{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.35}
 h1{font-size:2.1rem;font-weight:800}
 .eyebrow{font-size:.78rem;letter-spacing:.14em;color:var(--accent);font-weight:700}
 .lead{color:var(--muted);margin:0}
 .pieces{font-size:2.4rem;letter-spacing:.15em;line-height:1}
+.voice{border-left:3px solid var(--board-dark);padding:4px 0 4px 14px;margin:0;color:var(--fg)}
+.voice small{display:block;color:var(--muted);font-size:.8rem}
 button{font:inherit;cursor:pointer}
-.primary{background:var(--board-dark);color:#f4efe2;border:0;border-radius:6px;padding:14px 20px;font-weight:700;font-size:1rem}
-.primary:focus-visible,.opt:focus-visible,.ghost:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.primary{display:inline-block;background:var(--board-dark);color:var(--on-dark);border:0;border-radius:6px;padding:14px 20px;font-weight:700;font-size:1rem;text-decoration:none}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .ghost{background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:10px 14px}
 .progress{display:flex;gap:4px}
 .progress span{flex:1;height:6px;background:var(--line);border-radius:1px}
 .progress span.on{background:var(--board-dark)}
 .qno{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.q{font-size:1.35rem;font-weight:600}
-.opts{display:flex;flex-direction:column;gap:10px}
-.opt{text-align:left;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:14px 16px;font-size:1rem;transition:border-color .15s,transform .15s}
-.opt:hover{border-color:var(--accent);transform:translateX(3px)}
+.q{font-size:1.35rem;font-weight:600;min-height:3.8em}
+.scale{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.scale button{flex:none;border-radius:50%;border:2px solid var(--board-dark);background:transparent;transition:transform .12s,background .12s}
+.scale button:nth-child(1),.scale button:nth-child(5){width:54px;height:54px}
+.scale button:nth-child(2),.scale button:nth-child(4){width:44px;height:44px}
+.scale button:nth-child(3){width:34px;height:34px;border-color:var(--muted)}
+.scale button:hover{background:var(--board-light);transform:scale(1.06)}
+.scale button.sel{background:var(--board-dark)}
+.ends{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-top:-8px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.card-head{background:var(--board-dark);color:#f4efe2;padding:24px 20px;display:flex;gap:16px;align-items:center}
+.card-head{background:var(--board-dark);color:var(--on-dark);padding:22px 20px;display:flex;gap:16px;align-items:center}
 .glyph{font-size:4.6rem;line-height:1;flex:none}
 .type-name{font-size:1.8rem;font-weight:800}
-.catch{margin:0;opacity:.9}
+.catch{margin:0;opacity:.92}
+.match{font-size:.85rem;opacity:.85;font-variant-numeric:tabular-nums}
 .card-body{padding:20px;display:flex;flex-direction:column;gap:16px}
 .card-body h3{margin:0 0 4px;font-size:.8rem;letter-spacing:.12em;color:var(--accent)}
 .card-body p{margin:0}
-.bars{display:flex;flex-direction:column;gap:6px;font-size:.85rem}
-.bar{display:grid;grid-template-columns:5.5em 1fr 2.5em;gap:8px;align-items:center;font-variant-numeric:tabular-nums}
-.bar i{display:block;height:8px;background:var(--line);border-radius:1px;overflow:hidden}
-.bar b{display:block;height:100%;background:var(--accent)}
+.facts{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:2px}
+.axes{display:flex;flex-direction:column;gap:12px}
+.axis-top{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)}
+.axis-top b{color:var(--fg);font-variant-numeric:tabular-nums}
+.track{position:relative;height:10px;background:var(--line);border-radius:5px}
+.fill{position:absolute;left:0;top:0;bottom:0;background:var(--board-dark);border-radius:5px}
+.mark{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;background:var(--accent);border-radius:2px}
+.legend{font-size:.78rem;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:8px;border-radius:2px;vertical-align:middle;margin-right:4px}
 .pair{display:flex;gap:12px;align-items:center;border-top:1px dashed var(--line);padding-top:14px}
-.pair .g{font-size:2rem;line-height:1}
+.pair .g{font-size:2rem;line-height:1;flex:none}
 .actions{display:flex;flex-wrap:wrap;gap:10px}
-.actions a{text-decoration:none}
-.note{font-size:.82rem;color:var(--muted);margin:0}
+.note{font-size:.8rem;color:var(--muted);margin:0}
 .tag{font-size:.8rem;color:var(--muted);text-align:right}
-@media (prefers-reduced-motion:reduce){.opt{transition:none}.opt:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){.scale button{transition:none}.scale button:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -93,72 +105,68 @@ button{font:inherit;cursor:pointer}
 <main id="app"></main>
 
 <script>
-const P={
- K:{g:"♚",name:"キング",catch:"みんなが集まる、チームの中心",
-  desc:"自分が一番動くわけじゃないのに、いないと始まらない人。人の話を聞いて、最後に方向を決めるのが得意です。周りに仲間がいるほど力が出ます。",
-  str:"安心感と求心力。あなたの周りに自然と人が集まる。",weak:"一人きりだと動き出しにくい。守ってもらう側に回りがち。",
-  pair:"Q",pairWhy:"何でもこなすクイーンが、あなたの決めた方向へ全力で動いてくれる。"},
- Q:{g:"♛",name:"クイーン",catch:"どこへでも行ける、万能のエース",
-  desc:"縦にも横にも斜めにも動ける、盤上で一番自由な駒。頼まれたことは大体こなせて、気づけば全体を支えています。",
-  str:"行動範囲の広さと器用さ。どんな場面でも一手を出せる。",weak:"頼られすぎて疲れる。断るのが苦手。",
-  pair:"K",pairWhy:"キングが方向を決めてくれると、あなたは迷わず力を出し切れる。"},
- R:{g:"♜",name:"ルーク",catch:"決めたら一直線の実行者",
-  desc:"まっすぐにしか進まないけど、その分ぶれない。序盤は目立たなくても、道が開けた終盤に一番頼りになるタイプです。",
-  str:"やり切る力と一貫性。計画を最後まで形にする。",weak:"方向転換が苦手。エンジンがかかるまで時間がかかる。",
-  pair:"R",pairWhy:"同じルーク同士が一列に並ぶ「ルークの連結」は、チェスで最強の形のひとつ。"},
- B:{g:"♝",name:"ビショップ",catch:"人と違う角度から見抜く参謀",
-  desc:"斜めに動くビショップは、正面からは見えないラインを通します。みんなが見落とす前提や本質に気づくのがあなたの役割です。",
-  str:"独自の視点と分析力。遠くまで見通せる。",weak:"得意な色のマスにしか行けない。興味の有無で熱量が極端。",
-  pair:"N",pairWhy:"慎重なあなたと、跳び越えるナイト。マイナーピース同士で補い合える。"},
- N:{g:"♞",name:"ナイト",catch:"壁を跳び越える型破り",
-  desc:"唯一、他の駒を跳び越えられる駒。普通の道がふさがっていても、思いもよらないルートで突破します。直感で動いて、場の空気を変えるタイプ。",
-  str:"発想力と行動の速さ。予想外の一手で局面を動かす。",weak:"遠回りに見られがち。飽きっぽいと思われることも。",
-  pair:"B",pairWhy:"遠くまで見通すビショップが、あなたの跳ぶ先を照らしてくれる。"},
- P:{g:"♟",name:"ポーン",catch:"伸びしろのかたまり",
-  desc:"一歩ずつしか進めない。でも最後まで進み切れば、クイーンにもナイトにもなれる唯一の駒。コツコツ続けた先で大化けするタイプです。",
-  str:"継続力と粘り強さ。小さな前進を積み重ねられる。",weak:"後戻りが苦手。自分を過小評価しがち。",
-  pair:"P",pairWhy:"ポーンは斜め後ろの仲間に守られて強くなる。「ポーンの鎖」のように、同じタイプの仲間と組むと崩れない。"}
-};
-const PHN={O:"序盤",M:"中盤",E:"終盤"};
-const PH={
- K:{O:["城に守られる王","まずは安全な場所と仲間を固めてから動く慎重派。土台が整うまで無理はしません。"],
-    M:["指揮をとる王","入り乱れた状況でこそ全体を見渡し、最後の判断を下す司令塔。"],
-    E:["前に出る王","終盤のキングは最強クラスの駒。駒が減った最後の場面で、自ら最前線に立つタイプです。"]},
- Q:{O:["出番を待つ女王","序盤に出すぎたクイーンは狙われる。力を温存して、ここぞの機会を見極めます。"],
-    M:["盤上を支配する女王","選択肢が一番多い中盤で、縦横無尽に動き回るときが一番輝きます。"],
-    E:["勝負を決める女王","駒が少ない終盤、あなたの一手が勝敗を決めます。最後の決定打を任される人。"]},
- R:{O:["眠れる城","序盤のルークは隅で動けない。でもそれは力を溜めている時間。スロースターターの典型です。"],
-    M:["開いた列を走る城","道が一本開いた瞬間、盤の端から端まで一気に駆け抜けます。"],
-    E:["主役になる城","終盤ほど価値が上がるのがルーク。周りが消えたあとに、ようやく本領を発揮します。"]},
- B:{O:["布石を打つ僧正","序盤から長い斜線を引いて、後で効いてくる仕掛けを置いておくタイプ。"],
-    M:["二人で睨む僧正","ビショップは2つそろうと強い。信頼できる相棒と組んだとき、視野が倍になります。"],
-    E:["遠くから効く僧正","盤が開けた終盤、遠くの一点まで正確に届く。経験を積むほど鋭くなる人。"]},
- N:{O:["切り込み隊長の騎士","ナイトは序盤に真っ先に出る駒。新しい場に最初に飛び込むのがあなたです。"],
-    M:["混戦の騎士","駒が入り組んだ中盤こそナイトの独壇場。ごちゃごちゃした状況ほど燃えます。"],
-    E:["孤高の騎士","駒が少ない終盤でも、自分だけのルートで粘り強く道を探します。"]},
- P:{O:["道を開くポーン","最初の一手はたいていポーン。みんなが動き出すきっかけを作る人です。"],
-    M:["壁をつくるポーン","仲間と鎖のようにつながって陣地を守る。チームの土台そのもの。"],
-    E:["昇格目前のポーン","あと数マスでクイーンになれる、大化け直前のポーン。今がいちばん面白い時期です。"]}
-};
-const Q=[
- ["一番力が出るのは、どんなとき?",[["何かを新しく立ち上げるとき","O"],["みんなが入り乱れて忙しいとき","M"],["最後の追い込みとまとめのとき","E"]]],
- ["友達と旅行の計画。あなたの役割は?",[["行き先を決めて、みんなをまとめる","K"],["宿も交通も調べて、全部手配する","Q"],["「ここだけは絶対行く」を決めて譲らない","R"],["誰も知らない穴場を見つけてくる","N"]]],
- ["新しいことを始めるとき、まず何をする?",[["小さく始めて、毎日続ける","P"],["やり方を調べて近道を探す","B"],["とりあえず飛び込んで、走りながら考える","N"],["一緒にやる仲間を集める","K"]]],
- ["言われて一番うれしい言葉は?",[["「あなたがいると安心する」","K"],["「なんでもできるね」","Q"],["「その視点はなかった」","B"],["「よくここまで続けたね」","P"]]],
- ["締め切り前のあなたは?",[["計画どおり、淡々と終わらせる","R"],["他の人の分まで手伝っている","Q"],["ギリギリで一気に仕上げる","N"],["少しずつ進めていたので焦らない","P"]]],
- ["話し合いの場で、ついやってしまうのは?",[["結論を一つ決めて押し通す","R"],["みんなが見落としている前提を指摘する","B"],["突拍子もない案を出して空気を変える","N"],["全員の意見を聞いて、最後にまとめる","K"]]],
- ["正直、一番しんどいのは?",[["一人きりで動くこと","K"],["方針をコロコロ変えられること","R"],["興味のないことを延々やること","B"],["頼まれごとを断ること","Q"]]],
- ["理想の休日は?",[["気の合う仲間とわいわい","K"],["予定を詰め込んで全部楽しむ","Q"],["一人で本や映画に没頭する","B"],["ふらっと知らない街へ","N"]]],
- ["成長したなと感じるのは?",[["昨日できなかったことができたとき","P"],["目標に一直線で到達したとき","R"],["誰も思いつかない方法でうまくいったとき","N"],["任される範囲が広がったとき","Q"]]],
- ["チームでの立ち位置は?",[["真ん中にいて、いないと困る人","K"],["地味だけど最前線にいる人","P"],["少し引いて全体を見ている人","B"],["決まったことをやり切る人","R"]]],
- ["10日間のチーム課題。あなたが一番活躍するのは?",[["1日目のアイデア出し","O"],["中盤の議論と作り込み","M"],["最終日の仕上げと発表","E"]]],
- ["人と仲良くなるのは、どんな流れが多い?",[["初対面ですぐ打ち解ける","O"],["一緒に何かをするうちに","M"],["時間をかけて、少しずつ深く","E"]]],
- ["物語で一番ワクワクするのは?",[["旅立ちと出会いの序盤","O"],["仲間が増えて事件が起きる中盤","M"],["すべてがつながるラスト","E"]]],
- ["失敗したとき、最初にすること",[["原因を分析して、次の準備をする","B"],["気にせず次の一手を打つ","N"],["支えてくれる人に話す","K"],["これも経験値だと思ってまた一歩","P"]]],
- ["あなたを一番動かすものは?",[["誰かの役に立ちたい気持ち","Q"],["決めたことはやるという意地","R"],["面白そうかどうか","N"],["いつか大きくなりたいという野心","P"]]],
- ["盤上の駒を一つもらえるなら?",[["王冠のついたキング","K"],["すらっとしたクイーン","Q"],["どっしりした城のルーク","R"],["とんがり帽子のビショップ","B"],["馬の形のナイト","N"],["小さくて素朴なポーン","P"]]]
-];
 const SITE="https://akitashu.github.io/chess-shindan/";
+window.track=window.track||function(){};
+/* 診断の5軸。各軸2問(1問は逆転項目)。TIPI(10問でBig Fiveを測る尺度)と同じ構成 */
+const AX=[
+ {key:"speed",lo:"じっくり型",hi:"即行動型",name:"動き出しの速さ"},
+ {key:"attack",lo:"受け身型",hi:"仕掛け型",name:"攻めっ気"},
+ {key:"give",lo:"自分の成果重視",hi:"チームに尽くす",name:"献身"},
+ {key:"reset",lo:"貫く型",hi:"立て直し型",name:"立て直し力"},
+ {key:"change",lo:"型を磨く型",hi:"変化を楽しむ型",name:"変化への強さ"}
+];
+/* 1〜5の5段階。r:true は逆転項目(6-回答で計算) */
+const Q=[
+ {t:"新しいサークルやバイトに入ったら、初日から自分で話しかけにいく。",a:0},
+ {t:"話し合いでは、自分から意見を出して流れをつくるほうだ。",a:1},
+ {t:"チームが勝つためなら、目立たない役回りでも喜んで引き受けられる。",a:2},
+ {t:"うまくいかないときは、いったん引いてやり方を変えられる。",a:3},
+ {t:"環境が大きく変わるときほど、むしろワクワクする。",a:4},
+ {t:"何かを始める前に、まず周りの様子をじっくり見たい。",a:0,r:true},
+ {t:"自分から仕掛けるより、頼まれてから動くほうが性に合う。",a:1,r:true},
+ {t:"自分の頑張りがちゃんと評価されないと、正直やる気が出ない。",a:2,r:true},
+ {t:"一度決めたやり方は、多少うまくいかなくても貫きたい。",a:3,r:true},
+ {t:"慣れたやり方を少しずつ磨いていくほうが好きだ。",a:4,r:true}
+];
+/* 駒ごとの5軸の点数(1〜5)。2026年3〜10月の大会棋譜82,329局の集計から決めた */
+const P={
+ K:{g:"♚",name:"キング",catch:"最後に前に出る大将",v:[3,1,1,3,3],bias:-0.35,phase:"終盤",
+  desc:"序盤は仲間に守られ、駒が減った最後の場面で自ら前に出る。普段は落ち着いていて、ここ一番で責任を引き受ける人です。",
+  facts:["動きの67%が終盤","自分から駒を取るのは動きの7%だけ(全駒で最少)"],
+  change:"2013年と比べて終盤の割合が9ポイント増え、6駒で最も大きく伸びた項目でした。最後の場面で、ますます頼られる存在です。",
+  str:"場が落ち着いたときの安心感。最後に腹をくくれる。",weak:"序盤は動き出しが遅く見られがち。人に任せすぎることも。",
+  pair:"Q",pairWhy:"何でもこなすクイーンが、あなたが決めた方向へ全力で動いてくれる。",set:"キング&クイーンのセット"},
+ Q:{g:"♛",name:"クイーン",catch:"どこでも主役の万能エース",v:[2,5,3,4,5],bias:1.3,phase:"中盤",
+  desc:"縦にも横にも斜めにも動ける、盤上で一番自由な駒。自分から仕掛け、最後の決定打まで任される人です。",
+  facts:["チェックメイトの58%を決める(全駒で最多)","動きの17.5%がチェック(全駒で最多)","動きの70%が中盤"],
+  change:"2013年からの変化が6駒で最も大きい駒でした。メイトを決める割合は50%から58%へ。変化に強く、役割を広げ続けるタイプです。",
+  str:"行動範囲の広さと決定力。どんな場面でも一手を出せる。",weak:"何でも引き受けて狙われやすい。対局の66%で取られている。",
+  pair:"K",pairWhy:"キングが方向を決めてくれると、あなたは迷わず力を出し切れる。",set:"キング&クイーンのセット"},
+ R:{g:"♜",name:"ルーク",catch:"遅咲きの一直線",v:[1,4,4,2,4],bias:0.69,phase:"終盤",
+  desc:"序盤は隅で動けない。でも道が開いた瞬間、盤の端から端まで一直線に駆け抜けます。エンジンがかかってからが本番の人です。",
+  facts:["初めて動くのは平均19手目(全駒で最も遅い)","動きの49%が終盤、序盤はわずか4%","犠牲になる手が1000手あたり16.2回(全駒で最多)"],
+  change:"2013年と比べて終盤の割合が42%から49%へ。変化の大きさは6駒中2位で、時代とともに出番が増えた遅咲きの駒です。",
+  str:"やり切る力と勝負どころで身を切る覚悟。",weak:"スタートが遅い。方向転換は苦手(後ろに下がる手は12%)。",
+  pair:"R",pairWhy:"2つのルークが一列に並ぶ「ルークの連結」は、チェスで最強の形のひとつ。",set:"ルーク2個のセット"},
+ B:{g:"♝",name:"ビショップ",catch:"引いて見通す戦略家",v:[3,3,3,5,1],bias:-0.23,phase:"中盤",
+  desc:"斜めに長く利く駒。一歩引いた位置から、正面からは見えないラインを通します。全体を見て、静かに局面を整える人です。",
+  facts:["後ろに下がる手が27%(全駒で最多)","動きの45%が中盤","取られる率75%"],
+  change:"2013年からの変化が6駒で最も小さい駒でした。時代が変わっても役割がぶれない、安定感のあるタイプです。",
+  str:"一度引いて立て直せる冷静さと、遠くまで見通す視野。",weak:"得意なマスの色にしか行けない。得意と不得意がはっきり分かれる。",
+  pair:"N",pairWhy:"慎重なあなたと、跳び越えるナイト。マイナーピース同士で補い合える。",set:"ビショップ&ナイトのセット"},
+ N:{g:"♞",name:"ナイト",catch:"最初に飛び込む切り込み隊長",v:[5,3,5,3,2],bias:-0.25,phase:"序盤〜中盤",
+  desc:"唯一ほかの駒を跳び越えられる駒で、対局の最初に真っ先に出ていきます。新しい場に一番に飛び込み、体を張って道を開く人です。",
+  facts:["初めて動くのは平均5手目(全駒で最も早い)","取られる率81%(全駒で最も高い)","動きの39%が序盤"],
+  change:"2013年からの変化は6駒中2番目に小さく、13年たっても「真っ先に出て、体を張る」役割は変わっていません。",
+  str:"初速と度胸。ふさがった道も予想外のルートで越えていく。",weak:"散りやすい。遠くへ行くのには時間がかかる。",
+  pair:"B",pairWhy:"遠くまで見通すビショップが、あなたの跳ぶ先を照らしてくれる。",set:"ビショップ&ナイトのセット"},
+ P:{g:"♟",name:"ポーン",catch:"一歩ずつ道を開く、伸びしろの人",v:[2,2,3,1,3],bias:-1.16,phase:"序盤",
+  desc:"一歩ずつしか進めず、後ろにも戻れない。でもみんなが動き出すきっかけをつくり、最後まで進めばクイーンにもなれる唯一の駒です。",
+  facts:["動きの43%が序盤","後ろに下がる手は0%(ルール上戻れない)","1局あたり0.19回、ほかの駒に成る"],
+  change:"ほかの駒に成った回数は、2013年の1局0.07回から2026年は0.19回へ、約2.7倍に増えました。大化けのチャンスが広がっている駒です。",
+  str:"決めたら戻らない粘り強さ。小さな前進を積み重ねられる。",weak:"後戻りが苦手。自分を過小評価しがち。",
+  pair:"P",pairWhy:"ポーンは斜め後ろの仲間に守られて強くなる。「ポーンの鎖」のように、同じタイプの仲間と組むと崩れない。",set:"ポーン2個のセット"}
+};
 const ORDER=["K","Q","R","B","N","P"];
 const app=document.getElementById("app");
 let i=0,ans=[];
@@ -167,56 +175,70 @@ function start(){
  app.innerHTML=`<div class="eyebrow">CHESS PIECE TYPE</div>
  <h1>あなたは、盤上のどの駒?</h1>
  <div class="pieces" aria-hidden="true">♚♛♜♝♞♟</div>
- <p class="lead">16の質問に直感で答えると、6つの駒と3つの局面(序盤・中盤・終盤)を組み合わせた18タイプから、あなたの駒と相性のいい駒がわかります。所要時間は1〜2分。</p>
+ <p class="lead">10の質問に5段階で答えると、6つのチェス駒からあなたのタイプがわかります。駒の性格は、2026年の大会の棋譜82,329局を集計して決めました。所要時間は1分ほどです。</p>
+ <p class="voice">チェスのルールを知らなくても大丈夫です。直感でお答えください。<small>案内役: ポーン小生</small></p>
  <div><button class="primary" id="go">診断をはじめる</button></div>`;
  document.getElementById("go").onclick=()=>{i=0;ans=[];track("quiz_start");ask();};
 }
 function ask(){
- const [q,opts]=Q[i];
+ const q=Q[i];
  app.innerHTML=`<div class="progress" aria-hidden="true">${Q.map((_,k)=>`<span class="${k<=i?"on":""}"></span>`).join("")}</div>
  <div class="qno">Q${i+1} / ${Q.length}</div>
- <h2 class="q">${q}</h2>
- <div class="opts">${opts.map((o,k)=>`<button class="opt" data-k="${k}">${o[0]}</button>`).join("")}</div>
+ <h2 class="q">${q.t}</h2>
+ <div class="scale" role="group" aria-label="5段階で回答">${[1,2,3,4,5].map(n=>`<button data-n="${n}" class="${ans[i]===n?"sel":""}" aria-label="${["まったく違う","やや違う","どちらでもない","ややそう","とてもそう"][n-1]}"></button>`).join("")}</div>
+ <div class="ends"><span>まったく違う</span><span>とてもそう</span></div>
  ${i>0?`<div><button class="ghost" id="back">ひとつ戻る</button></div>`:""}`;
- app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{ans[i]=opts[+b.dataset.k][1];i++;i<Q.length?ask():result();});
+ app.querySelectorAll(".scale button").forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.n;b.classList.add("sel");setTimeout(()=>{i++;i<Q.length?ask():result();},160);});
  const bk=document.getElementById("back"); if(bk) bk.onclick=()=>{i--;ask();};
- app.querySelector(".opt").focus({preventScroll:true});
 }
+/* 採点: 逆転項目を6-回答に直し、軸ごとに2問の平均(1〜5)。駒の点数との距離が一番近い駒が結果 */
 function score(){
- const appear={},hit={};ORDER.forEach(p=>{appear[p]=0;hit[p]=0;});
- const ph={O:0,M:0,E:0};const last=ans[Q.length-1];
- Q.forEach(([_,opts],k)=>{const seen=new Set(opts.map(o=>o[1]));seen.forEach(p=>{if(p in appear)appear[p]++;});const a=ans[k];if(a in hit)hit[a]++;else if(a in ph)ph[a]++;});
- const pct={};ORDER.forEach(p=>pct[p]=Math.round(hit[p]/appear[p]*100));
- const top=[...ORDER].sort((a,b)=>pct[b]-pct[a]||hit[b]-hit[a]||(last===b)-(last===a));
- const phase=["M","O","E"].sort((a,b)=>ph[b]-ph[a])[0];
- return {pct,top,phase};
+ const sum=[0,0,0,0,0],n=[0,0,0,0,0];
+ Q.forEach((q,k)=>{const a=ans[k];sum[q.a]+=q.r?6-a:a;n[q.a]++;});
+ const u=sum.map((s,k)=>s/n[k]);
+ const dist=p=>Math.sqrt(P[p].v.reduce((s,v,k)=>s+(u[k]-v)**2,0));
+ const ranked=[...ORDER].sort((a,b)=>(dist(a)**2-P[a].bias)-(dist(b)**2-P[b].bias));
+ const fit=p=>Math.round(100-dist(p)/Math.sqrt(80)*100);
+ return {u,ranked,fit};
 }
 function result(){
- const {pct,top,phase}=score();track("quiz_complete",{piece:top[0],phase});const key=top[0],t=P[key],pr=P[t.pair],[sub,subText]=PH[key][phase];
- const text=`私は「${PHN[phase]}の${t.name}」タイプ。${sub}。相性がいいのは${pr.name}。 #チェス駒診断`;
+ const {u,ranked,fit}=score();const key=ranked[0],t=P[key],pr=P[t.pair],second=P[ranked[1]];
+ track("quiz_complete",{piece:key});
+ const pct=x=>Math.round((x-1)/4*100);
+ const text=`私は「${t.name}」タイプでした。${t.catch}。相性がいいのは${pr.name}。 #チェス駒診断`;
  app.innerHTML=`<div class="eyebrow">診断結果</div>
  <section class="card" aria-label="診断結果カード">
   <div class="card-head"><div class="glyph" aria-hidden="true">${t.g}</div>
-   <div><div style="font-size:.85rem;opacity:.8">あなたは</div><div class="type-name">${PHN[phase]}の${t.name}</div><p class="catch">${sub}</p></div></div>
+   <div><div class="match">あなたは</div><div class="type-name">${t.name}タイプ</div><p class="catch">${t.catch}</p><div class="match">一致度 ${fit(key)}%</div></div></div>
   <div class="card-body">
-   <div><h3>${t.name}タイプ: ${t.catch}</h3><p>${t.desc}</p></div>
-   <div><h3>${PHN[phase]}で輝く</h3><p>${subText}</p></div>
+   <p>${t.desc}</p>
+   <div><h3>データで見る${t.name}</h3><ul class="facts">${t.facts.map(f=>`<li>${f}</li>`).join("")}</ul></div>
+   <div><h3>13年でどう変わったか</h3><p>${t.change}</p></div>
    <div><h3>強み</h3><p>${t.str}</p></div>
    <div><h3>弱点</h3><p>${t.weak}</p></div>
-   <div><h3>あなたの駒バランス</h3><div class="bars">${top.map(p=>`<div class="bar"><span>${P[p].g} ${P[p].name}</span><i><b style="width:${pct[p]}%"></b></i><span>${pct[p]}%</span></div>`).join("")}</div></div>
-   <div class="pair"><div class="g" aria-hidden="true">${t.g}${pr.g}</div><div><h3>相性のいい駒: ${pr.name}</h3><p>${t.pairWhy}</p></div></div>
+   <div><h3>本気になる時期</h3><p>${t.phase}。${t.name}の動きが一番多い局面です。</p></div>
+   <div><h3>あなたの5つの傾向</h3>
+    <div class="axes">${AX.map((a,k)=>`<div><div class="axis-top"><span>${a.lo}</span><b>${a.name} ${pct(u[k])}%</b><span>${a.hi}</span></div>
+     <div class="track"><div class="fill" style="width:${pct(u[k])}%"></div><div class="mark" style="left:${pct(t.v[k])}%" title="${t.name}の値"></div></div></div>`).join("")}</div>
+    <div class="legend"><span><i style="background:var(--board-dark)"></i>あなた</span><span><i style="background:var(--accent)"></i>${t.name}</span></div>
+   </div>
+   <div class="pair"><div class="g" aria-hidden="true">${t.g}${pr.g}</div><div><h3>相性のいい駒: ${pr.name}</h3><p>${t.pairWhy}</p><p class="note">この組み合わせは「${t.set}」のキーホルダーになっています。</p></div></div>
+   <p class="note">次に近いのは${second.name}タイプ(一致度 ${fit(ranked[1])}%)でした。</p>
+   <p class="voice">${t.name}の貴殿も、小生と同じく一手ずつ。本日も一歩一ポーン。<small>ポーン小生</small></p>
    <div class="tag">#チェス駒診断</div>
   </div>
  </section>
  <p class="note">このカードをスクリーンショットして、ストーリーズやXでシェアできます。</p>
  <div class="actions">
-  <a class="primary" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SITE)}" target="_blank" rel="noopener" onclick="track('share_x')">Xでシェア</a>
+  <a class="primary" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SITE)}" target="_blank" rel="noopener" id="sx">Xでシェア</a>
   <button class="ghost" id="copy">結果の文章をコピー</button>
   <button class="ghost" id="again">もう一度診断する</button>
- </div>`;
+ </div>
+ <p class="note">データについて: The Week in Chess(2026年3〜10月、82,329局/2013年9〜12月、17,968局)の大会棋譜を集計。2つの時期の差には、収録された大会の種類の違いも含まれます。</p>`;
  document.getElementById("again").onclick=start;
+ document.getElementById("sx").onclick=()=>track("share_x");
  const c=document.getElementById("copy");
- c.onclick=()=>{navigator.clipboard.writeText(text).then(()=>c.textContent="コピーしました").catch(()=>{c.textContent=text;});};
+ c.onclick=()=>{navigator.clipboard.writeText(text+" "+SITE).then(()=>c.textContent="コピーしました").catch(()=>{c.textContent=text;});};
  window.scrollTo(0,0);
 }
 start();
