@@ -96,6 +96,22 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-off
 .actions{display:flex;flex-wrap:wrap;gap:10px}
 .note{font-size:.8rem;color:var(--muted);margin:0}
 .tag{font-size:.8rem;color:var(--muted);text-align:right}
+.sec{border-top:1px dashed var(--line);padding-top:14px}
+.board{display:grid;grid-template-columns:repeat(8,1fr);width:100%;max-width:280px;aspect-ratio:1;border:1px solid var(--line);margin:8px 0}
+.board div{display:flex;align-items:center;justify-content:center;font-size:1.3rem;line-height:1}
+.board .l{background:var(--board-light)}.board .d{background:var(--board-dark);color:var(--on-dark)}
+.board .dot::after{content:"";width:28%;height:28%;border-radius:50%;background:var(--accent)}
+.board .x::after{content:"×";color:var(--accent);font-weight:700}
+.opening{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.opening .nm{font-family:var(--display);font-weight:800;font-size:1.15rem}
+.opening code{font-family:ui-monospace,Menlo,monospace;font-size:.9rem;color:var(--accent)}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--surface)}
+summary{cursor:pointer;font-weight:700}
+.bd{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+.bd th,.bd td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.bd td.n{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700}
+.tbl{overflow-x:auto}
+.why{margin:6px 0 0;padding-left:1.2em;font-size:.88rem;display:flex;flex-direction:column;gap:6px}
 @media (prefers-reduced-motion:reduce){.scale button{transition:none}.scale button:hover{transform:none}}
 </style>
 </head>
@@ -109,11 +125,11 @@ const SITE="https://akitashu.github.io/chess-shindan/";
 window.track=window.track||function(){};
 /* 診断の5軸。各軸2問(1問は逆転項目)。TIPI(10問でBig Fiveを測る尺度)と同じ構成 */
 const AX=[
- {key:"speed",lo:"じっくり型",hi:"即行動型",name:"動き出しの速さ"},
- {key:"attack",lo:"受け身型",hi:"仕掛け型",name:"攻めっ気"},
- {key:"give",lo:"自分の成果重視",hi:"チームに尽くす",name:"献身"},
- {key:"reset",lo:"貫く型",hi:"立て直し型",name:"立て直し力"},
- {key:"change",lo:"型を磨く型",hi:"変化を楽しむ型",name:"変化への強さ"}
+ {key:"speed",lo:"じっくり型",hi:"即行動型",name:"動き出しの速さ",src:"駒が初めて動く手目",ex:"ナイトは平均5手目で真っ先に出て、ルークは平均19手目までほぼ動かない"},
+ {key:"attack",lo:"受け身型",hi:"仕掛け型",name:"攻めっ気",src:"動きのうちチェックや駒を取る割合",ex:"クイーンは動きの17.5%がチェック、キングは駒を取る手が7%だけ"},
+ {key:"give",lo:"自分の成果重視",hi:"チームに尽くす",name:"献身",src:"対局中に取られる率と、犠牲になる手の多さ",ex:"ナイトは81%の対局で取られ、キングは取られない(取られたら負け)"},
+ {key:"reset",lo:"貫く型",hi:"立て直し型",name:"立て直し力",src:"後ろに下がる手の割合",ex:"ビショップは27%の手で下がり、ポーンはルール上0%"},
+ {key:"change",lo:"型を磨く型",hi:"変化を楽しむ型",name:"変化への強さ",src:"2013年と2026年で数字がどれだけ変わったか",ex:"クイーンが最も大きく変わり、ビショップが最も変わらなかった"}
 ];
 /* 1〜5の5段階。r:true は逆転項目(6-回答で計算) */
 const Q=[
@@ -168,6 +184,36 @@ const P={
   pair:"P",pairWhy:"ポーンは斜め後ろの仲間に守られて強くなる。「ポーンの鎖」のように、同じタイプの仲間と組むと崩れない。",set:"ポーン2個のセット"}
 };
 const ORDER=["K","Q","R","B","N","P"];
+const EX={
+ K:{sq:[3,3],move:"全方向に1マスずつ動けます。取られたら負け(これがチェックメイト)。ルークと一緒に動く特別な手「キャスリング」で、安全な場所へ避難できます。",
+  op:{nm:"カロ・カン・ディフェンス",mv:"1.e4 c6",tx:"黒の定番の守り。まずキングの周りを固め、駒が減った終盤で力を出す、キング型にぴったりの作戦です。"}},
+ Q:{sq:[3,3],move:"縦・横・斜めに何マスでも動けます。ルークとビショップの動きを合わせた最強の駒で、価値はポーン9個分(9点)です。",
+  op:{nm:"スカンジナビアン・ディフェンス",mv:"1.e4 d5 2.exd5 Qxd5",tx:"2手目でいきなりクイーンが中央に出ていく、珍しい作戦。クイーンが最初から主役になります。"}},
+ R:{sq:[3,3],move:"縦と横に何マスでも動けます。価値は5点。序盤は隅に閉じこめられていますが、縦の列が開くと一気に働きます。",
+  op:{nm:"クイーンズ・ギャンビット",mv:"1.d4 d5 2.c4",tx:"ポーンを差し出して中央を取りにいく、世界チャンピオン戦でも定番の作戦。縦の列が開きやすく、あとからルークが活躍する展開になりやすいです。"}},
+ B:{sq:[3,3],move:"斜めに何マスでも動けます。最初にいたマスの色(白か黒)から一生出られません。価値は3点です。",
+  op:{nm:"キングズ・インディアン・ディフェンス",mv:"1.d4 Nf6 2.c4 g6 3.Nc3 Bg7",tx:"ビショップを盤の角近く(g7)に置き、端から端までの長い斜めをにらませる作戦。一歩引いた場所から盤全体に効かせます。"}},
+ N:{sq:[3,3],move:"「縦2マス+横1マス」のL字に跳びます。ほかの駒を跳び越えられる唯一の駒です。価値は3点です。",
+  op:{nm:"アリョーヒン・ディフェンス",mv:"1.e4 Nf6",tx:"1手目からナイトが飛び出し、相手のポーンをわざと前へ誘い出す挑発的な作戦です。"}},
+ P:{sq:[4,1],move:"前に1マス(最初の1回だけ2マスも可)進みます。駒を取るときだけ斜め前。後ろには戻れません。一番奥まで進むと、キング以外の好きな駒に「成る」ことができます(プロモーション)。価値は1点です。",
+  op:{nm:"フレンチ・ディフェンス",mv:"1.e4 e6 2.d4 d5",tx:"ポーンが斜めにつながる「ポーンの鎖」で陣地を固めてから反撃する作戦。ポーンが主役のオープニングです。"}}
+};
+const FILES="abcdefgh";
+function board(key){
+ const [f,r]=EX[key].sq, dot=new Set(), cap=new Set(), id=(x,y)=>x+","+y, inb=(x,y)=>x>=0&&x<8&&y>=0&&y<8;
+ const slide=dirs=>dirs.forEach(([dx,dy])=>{let x=f+dx,y=r+dy;while(inb(x,y)){dot.add(id(x,y));x+=dx;y+=dy;}});
+ const step=dirs=>dirs.forEach(([dx,dy])=>{if(inb(f+dx,r+dy))dot.add(id(f+dx,r+dy));});
+ const O=[[1,0],[-1,0],[0,1],[0,-1]],D=[[1,1],[1,-1],[-1,1],[-1,-1]];
+ if(key==="R")slide(O); if(key==="B")slide(D); if(key==="Q")slide([...O,...D]); if(key==="K")step([...O,...D]);
+ if(key==="N")step([[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]]);
+ if(key==="P"){dot.add(id(f,r+1));dot.add(id(f,r+2));cap.add(id(f-1,r+1));cap.add(id(f+1,r+1));}
+ let h="";
+ for(let y=7;y>=0;y--)for(let x=0;x<8;x++){const c=(x+y)%2?"l":"d";const k=id(x,y);
+  h+=`<div class="${c} ${dot.has(k)?"dot":""} ${cap.has(k)?"x":""}" aria-hidden="true">${x===f&&y===r?P[key].g:""}</div>`;}
+ return `<div class="board" role="img" aria-label="${P[key].name}の動ける範囲">${h}</div>`;
+}
+const LBL=["まったく違う","やや違う","どちらでもない","ややそう","とてもそう"];
+
 const app=document.getElementById("app");
 let i=0,ans=[];
 
@@ -224,10 +270,26 @@ function result(){
    </div>
    <div class="pair"><div class="g" aria-hidden="true">${t.g}${pr.g}</div><div><h3>相性のいい駒: ${pr.name}</h3><p>${t.pairWhy}</p><p class="note">この組み合わせは「${t.set}」のキーホルダーになっています。</p></div></div>
    <p class="note">次に近いのは${second.name}タイプ(一致度 ${fit(ranked[1])}%)でした。</p>
+   <div class="sec"><h3>${t.name}の動き方</h3><p>${EX[key].move}</p>${board(key)}<p class="note">${key==="P"?"●は進めるマス、×は駒を取れるマス(白のポーンの場合)。":"●が動けるマス(まわりに駒がない場合)。"}</p></div>
+   <div class="sec"><h3>${t.name}タイプにおすすめのオープニング</h3>
+    <div class="opening"><span class="nm">${EX[key].op.nm}</span><code>${EX[key].op.mv}</code><span>${EX[key].op.tx}</span></div>
+    <p class="note">オープニングは対局の最初の数手の決まった指し方のこと。「1.e4」は1手目に白がeの列のポーンを4段目へ進める、という意味です。</p></div>
    <p class="voice">${t.name}の貴殿も、小生と同じく一手ずつ。本日も一歩一ポーン。<small>ポーン小生</small></p>
    <div class="tag">#チェス駒診断</div>
   </div>
  </section>
+ <details><summary>回答の内訳(どの質問が、どの傾向に何点入ったか)</summary>
+  <p class="note" style="margin-top:8px">各回答を−2〜+2点にし、各傾向の右側(即行動型など)に近づく方向をプラスにしています。逆向きの質問は「とてもそう」でマイナスになります。2問の合計(−4〜+4点)を0〜100%に直したのが、上のバーの数字です。</p>
+  <div class="tbl"><table class="bd"><thead><tr><th>質問</th><th>あなたの回答</th><th>入った先</th><th>点</th></tr></thead><tbody>
+  ${Q.map((q,k)=>{const v=(q.r?6-ans[k]:ans[k])-3;return `<tr><td>Q${k+1}. ${q.t}</td><td>${LBL[ans[k]-1]}</td><td>${AX[q.a].name}${q.r?"(逆向き)":""}</td><td class="n">${v>0?"+":""}${v}</td></tr>`;}).join("")}
+  </tbody></table></div>
+  <p class="note">合計: ${AX.map((a,k)=>{const s=Q.reduce((t,q,j)=>q.a===k?t+(q.r?6-ans[j]:ans[j])-3:t,0);return `${a.name} ${s>0?"+":""}${s}点→${pct(u[k])}%`;}).join(" / ")}</p>
+ </details>
+ <details><summary>この診断のしくみ(なぜこの5つの傾向なのか)</summary>
+  <p class="note" style="margin-top:8px">2026年の大会棋譜82,329局で、駒ごとの動きを数えました。そのうち「駒によって差がはっきり出る数字」で、かつ「人の性格に置き換えて自分で答えられるもの」を5つ選んでいます。</p>
+  <ul class="why">${AX.map(a=>`<li><b>${a.name}</b>(${a.lo}⇔${a.hi}): ${a.src}から。${a.ex}。</li>`).join("")}</ul>
+  <p class="note" style="margin-top:8px">「チェックメイトを決める割合」も候補でしたが、攻めっ気とほぼ同じ駒(クイーンとルーク)が高くなるため外しました。「どの局面で一番動くか」は10問では測りきれないため、結果の「本気になる時期」で紹介しています。あなたの5つの傾向と、各駒の5つの数字が一番近い駒が結果になります。</p>
+ </details>
  <p class="note">このカードをスクリーンショットして、ストーリーズやXでシェアできます。</p>
  <div class="actions">
   <a class="primary" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(SITE)}" target="_blank" rel="noopener" id="sx">Xでシェア</a>
