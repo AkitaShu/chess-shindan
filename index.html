@@ -114,6 +114,12 @@ button:focus-visible,a:focus-visible{outline:3px dashed var(--black);outline-off
 
 <script>
 const SITE="https://akitashu.github.io/chess-shindan/";
+/* 回答の保存先(Google Apps ScriptのウェブアプリURL)。空なら何も送らない */
+const SHEET_URL="";
+function saveAnswer(row){
+ if(!SHEET_URL)return;
+ try{fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(row)}).catch(()=>{});}catch(e){}
+}
 window.track=window.track||function(){};
 /* 診断の5軸。各軸2問(1問は逆転項目)。TIPI(10問でBig Fiveを測る尺度)と同じ構成 */
 const AX=[
@@ -253,7 +259,7 @@ let myMbti="";
 function mbti(){
  app.innerHTML=`<div class="qno">任意の質問</div>
  <h2 class="q">あなたのMBTI(16タイプ)を知っていたら教えてください。</h2>
- <p class="note">駒とMBTIの関係を調べるためのアンケートです。診断結果には影響しません。</p>
+ <p class="note">駒とMBTIの関係を調べるためのアンケートです。診断結果には影響しません。回答は名前などを含まない形で集計にのみ使います。</p>
  <div class="actions">${MBTI.map(m=>`<button class="ghost" data-m="${m}">${m}</button>`).join("")}</div>
  <div><button class="primary" id="skip">わからない・答えない</button></div>`;
  app.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{myMbti=b.dataset.m;result();});
@@ -262,6 +268,7 @@ function mbti(){
 function result(){
  const {u,ranked,fit}=score();const key=ranked[0],t=P[key],pr=P[t.pair],second=P[ranked[1]];
  track("quiz_complete",{piece:key,mbti:myMbti||"none"});
+ saveAnswer({piece:t.name,second:second.name,fit:fit(key),mbti:myMbti,answers:ans.slice(0,10),axes:u.map(x=>Math.round(x))});
  const pct=x=>Math.round(x);
  const text=`私は「${t.name}」タイプでした。${t.catch}。相性がいいのは${pr.name}。 #チェス駒診断`;
  app.innerHTML=`<div class="eyebrow">診断結果</div>
@@ -296,7 +303,7 @@ function result(){
   <button class="ghost" id="copy">結果の文章をコピー</button>
   <button class="ghost" id="again">もう一度診断する</button>
  </div>
- <p class="note">データについて: The Week in Chess(2026年3〜10月、82,329局/2013年9〜12月、17,968局)の大会棋譜を集計。2つの時期の差には、収録された大会の種類の違いも含まれます。駒の画像: Chessnut pieces by Alexis Luengas(Apache License 2.0)。</p>`;
+ <p class="note">データについて: The Week in Chess(2026年3〜10月、82,329局/2013年9〜12月、17,968局)の大会棋譜を集計。2つの時期の差には、収録された大会の種類の違いも含まれます。駒の画像: Chessnut pieces by Alexis Luengas(Apache License 2.0)。回答内容(10問の回答・結果・任意のMBTI)は、個人を特定しない形で集計に使います。</p>`;
  document.getElementById("again").onclick=start;
  document.getElementById("sx").onclick=()=>track("share_x");
  const c=document.getElementById("copy");
