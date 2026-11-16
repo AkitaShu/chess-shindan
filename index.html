@@ -125,58 +125,58 @@ const SITE="https://akitashu.github.io/chess-shindan/";
 window.track=window.track||function(){};
 /* 診断の5軸。各軸2問(1問は逆転項目)。TIPI(10問でBig Fiveを測る尺度)と同じ構成 */
 const AX=[
- {key:"speed",lo:"じっくり型",hi:"即行動型",name:"動き出しの速さ",src:"駒が初めて動く手目",ex:"ナイトは平均5手目で真っ先に出て、ルークは平均19手目までほぼ動かない"},
- {key:"attack",lo:"受け身型",hi:"仕掛け型",name:"攻めっ気",src:"動きのうちチェックや駒を取る割合",ex:"クイーンは動きの17.5%がチェック、キングは駒を取る手が7%だけ"},
- {key:"give",lo:"自分の成果重視",hi:"チームに尽くす",name:"献身",src:"対局中に取られる率と、犠牲になる手の多さ",ex:"ナイトは81%の対局で取られ、キングは取られない(取られたら負け)"},
- {key:"reset",lo:"貫く型",hi:"立て直し型",name:"立て直し力",src:"後ろに下がる手の割合",ex:"ビショップは27%の手で下がり、ポーンはルール上0%"},
- {key:"change",lo:"型を磨く型",hi:"変化を楽しむ型",name:"変化への強さ",src:"2013年と2026年で数字がどれだけ変わったか",ex:"クイーンが最も大きく変わり、ビショップが最も変わらなかった"}
+ {key:"speed",lo:"様子見型",hi:"先陣型",name:"動き出しの速さ",src:"初めて動く手目(早いほど高い)",unit:"手目",raw:{K:19.0,Q:23.8,R:37.2,B:16.1,N:9.2,P:24.1}},
+ {key:"attack",lo:"支える型",hi:"仕掛ける型",name:"攻めっ気",src:"動きのうち駒を取る手とチェックの割合",unit:"%",raw:{K:7.5,Q:42.1,R:35.0,B:28.2,N:25.2,P:24.5}},
+ {key:"give",lo:"最後まで残る型",hi:"体を張る型",name:"体の張り方",src:"対局中に取られる率",unit:"%",raw:{K:0,Q:65.5,R:56.4,B:74.6,N:81.1,P:55.1}},
+ {key:"reset",lo:"貫く型",hi:"立て直す型",name:"立て直し力",src:"後ろに下がる手の割合",unit:"%",raw:{K:19.1,Q:24.2,R:12.0,B:27.0,N:24.0,P:0}},
+ {key:"late",lo:"序盤型",hi:"終盤型",name:"本領を発揮する時期",src:"中盤の動きの割合×0.5+終盤の動きの割合",unit:"点",raw:{K:77.6,Q:51.8,R:72.8,B:45.1,N:39.6,P:40.1}}
 ];
 /* 1〜5の5段階。r:true は逆転項目(6-回答で計算) */
 const Q=[
  {t:"新しいサークルやバイトに入ったら、初日から自分で話しかけにいく。",a:0},
  {t:"話し合いでは、自分から意見を出して流れをつくるほうだ。",a:1},
- {t:"チームが勝つためなら、目立たない役回りでも喜んで引き受けられる。",a:2},
+ {t:"チームのためなら、損な役回りや矢面に立つ役も引き受けられる。",a:2},
  {t:"うまくいかないときは、いったん引いてやり方を変えられる。",a:3},
- {t:"環境が大きく変わるときほど、むしろワクワクする。",a:4},
+ {t:"テストや課題は、締め切りが近づくほど力が出る。",a:4},
  {t:"何かを始める前に、まず周りの様子をじっくり見たい。",a:0,r:true},
  {t:"自分から仕掛けるより、頼まれてから動くほうが性に合う。",a:1,r:true},
- {t:"自分の頑張りがちゃんと評価されないと、正直やる気が出ない。",a:2,r:true},
+ {t:"自分は最後まで場に残って、全体の責任を持つ役でいたい。",a:2,r:true},
  {t:"一度決めたやり方は、多少うまくいかなくても貫きたい。",a:3,r:true},
- {t:"慣れたやり方を少しずつ磨いていくほうが好きだ。",a:4,r:true}
+ {t:"新しいことは、始めた直後が一番やる気がある。",a:4,r:true}
 ];
 /* 駒ごとの5軸の点数(1〜5)。2026年3〜10月の大会棋譜82,329局の集計から決めた */
 const P={
- K:{g:"♚",name:"キング",catch:"最後に前に出る大将",v:[3,1,1,3,3],bias:-0.35,phase:"終盤",
+ K:{g:"♚",name:"キング",catch:"最後に前に出る大将",v:[65,0,0,71,100],bias:-0.242,phase:"終盤",
   desc:"序盤は仲間に守られ、駒が減った最後の場面で自ら前に出る。普段は落ち着いていて、ここ一番で責任を引き受ける人です。",
   facts:["動きの67%が終盤","自分から駒を取るのは動きの7%だけ(全駒で最少)"],
   change:"2013年と比べて終盤の割合が9ポイント増え、6駒で最も大きく伸びた項目でした。最後の場面で、ますます頼られる存在です。",
   str:"場が落ち着いたときの安心感。最後に腹をくくれる。",weak:"序盤は動き出しが遅く見られがち。人に任せすぎることも。",
   pair:"Q",pairWhy:"何でもこなすクイーンが、あなたが決めた方向へ全力で動いてくれる。",set:"キング&クイーンのセット"},
- Q:{g:"♛",name:"クイーン",catch:"どこでも主役の万能エース",v:[2,5,3,4,5],bias:1.3,phase:"中盤",
+ Q:{g:"♛",name:"クイーン",catch:"どこでも主役の万能エース",v:[48,100,81,90,32],bias:0.112,phase:"中盤",
   desc:"縦にも横にも斜めにも動ける、盤上で一番自由な駒。自分から仕掛け、最後の決定打まで任される人です。",
   facts:["チェックメイトの58%を決める(全駒で最多)","動きの17.5%がチェック(全駒で最多)","動きの70%が中盤"],
   change:"2013年からの変化が6駒で最も大きい駒でした。メイトを決める割合は50%から58%へ。変化に強く、役割を広げ続けるタイプです。",
   str:"行動範囲の広さと決定力。どんな場面でも一手を出せる。",weak:"何でも引き受けて狙われやすい。対局の66%で取られている。",
   pair:"K",pairWhy:"キングが方向を決めてくれると、あなたは迷わず力を出し切れる。",set:"キング&クイーンのセット"},
- R:{g:"♜",name:"ルーク",catch:"遅咲きの一直線",v:[1,4,4,2,4],bias:0.69,phase:"終盤",
+ R:{g:"♜",name:"ルーク",catch:"遅咲きの一直線",v:[0,79,70,44,87],bias:-0.118,phase:"終盤",
   desc:"序盤は隅で動けない。でも道が開いた瞬間、盤の端から端まで一直線に駆け抜けます。エンジンがかかってからが本番の人です。",
   facts:["初めて動くのは平均19手目(全駒で最も遅い)","動きの49%が終盤、序盤はわずか4%","犠牲になる手が1000手あたり16.2回(全駒で最多)"],
   change:"2013年と比べて終盤の割合が42%から49%へ。変化の大きさは6駒中2位で、時代とともに出番が増えた遅咲きの駒です。",
   str:"やり切る力と勝負どころで身を切る覚悟。",weak:"スタートが遅い。方向転換は苦手(後ろに下がる手は12%)。",
   pair:"R",pairWhy:"2つのルークが一列に並ぶ「ルークの連結」は、チェスで最強の形のひとつ。",set:"ルーク2個のセット"},
- B:{g:"♝",name:"ビショップ",catch:"引いて見通す戦略家",v:[3,3,3,5,1],bias:-0.23,phase:"中盤",
+ B:{g:"♝",name:"ビショップ",catch:"引いて見通す戦略家",v:[75,60,92,100,15],bias:0.204,phase:"中盤",
   desc:"斜めに長く利く駒。一歩引いた位置から、正面からは見えないラインを通します。全体を見て、静かに局面を整える人です。",
   facts:["後ろに下がる手が27%(全駒で最多)","動きの45%が中盤","取られる率75%"],
   change:"2013年からの変化が6駒で最も小さい駒でした。時代が変わっても役割がぶれない、安定感のあるタイプです。",
   str:"一度引いて立て直せる冷静さと、遠くまで見通す視野。",weak:"得意なマスの色にしか行けない。得意と不得意がはっきり分かれる。",
   pair:"N",pairWhy:"慎重なあなたと、跳び越えるナイト。マイナーピース同士で補い合える。",set:"ビショップ&ナイトのセット"},
- N:{g:"♞",name:"ナイト",catch:"最初に飛び込む切り込み隊長",v:[5,3,5,3,2],bias:-0.25,phase:"序盤〜中盤",
+ N:{g:"♞",name:"ナイト",catch:"最初に飛び込む切り込み隊長",v:[100,51,100,89,0],bias:0.167,phase:"序盤〜中盤",
   desc:"唯一ほかの駒を跳び越えられる駒で、対局の最初に真っ先に出ていきます。新しい場に一番に飛び込み、体を張って道を開く人です。",
   facts:["初めて動くのは平均5手目(全駒で最も早い)","取られる率81%(全駒で最も高い)","動きの39%が序盤"],
   change:"2013年からの変化は6駒中2番目に小さく、13年たっても「真っ先に出て、体を張る」役割は変わっていません。",
   str:"初速と度胸。ふさがった道も予想外のルートで越えていく。",weak:"散りやすい。遠くへ行くのには時間がかかる。",
   pair:"B",pairWhy:"遠くまで見通すビショップが、あなたの跳ぶ先を照らしてくれる。",set:"ビショップ&ナイトのセット"},
- P:{g:"♟",name:"ポーン",catch:"一歩ずつ道を開く、伸びしろの人",v:[2,2,3,1,3],bias:-1.16,phase:"序盤",
+ P:{g:"♟",name:"ポーン",catch:"一歩ずつ道を開く、伸びしろの人",v:[47,49,68,0,1],bias:-0.124,phase:"序盤",
   desc:"一歩ずつしか進めず、後ろにも戻れない。でもみんなが動き出すきっかけをつくり、最後まで進めばクイーンにもなれる唯一の駒です。",
   facts:["動きの43%が序盤","後ろに下がる手は0%(ルール上戻れない)","1局あたり0.19回、ほかの駒に成る"],
   change:"ほかの駒に成った回数は、2013年の1局0.07回から2026年は0.19回へ、約2.7倍に増えました。大化けのチャンスが広がっている駒です。",
@@ -234,23 +234,38 @@ function ask(){
  <div class="scale" role="group" aria-label="5段階で回答">${[1,2,3,4,5].map(n=>`<button data-n="${n}" class="${ans[i]===n?"sel":""}" aria-label="${["まったく違う","やや違う","どちらでもない","ややそう","とてもそう"][n-1]}"></button>`).join("")}</div>
  <div class="ends"><span>まったく違う</span><span>とてもそう</span></div>
  ${i>0?`<div><button class="ghost" id="back">ひとつ戻る</button></div>`:""}`;
- app.querySelectorAll(".scale button").forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.n;b.classList.add("sel");setTimeout(()=>{i++;i<Q.length?ask():result();},160);});
+ app.querySelectorAll(".scale button").forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.n;b.classList.add("sel");setTimeout(()=>{i++;i<Q.length?ask():mbti();},160);});
  const bk=document.getElementById("back"); if(bk) bk.onclick=()=>{i--;ask();};
 }
-/* 採点: 逆転項目を6-回答に直し、軸ごとに2問の平均(1〜5)。駒の点数との距離が一番近い駒が結果 */
+/* 採点: 回答を1〜5点(逆向きの質問は6−回答)にし、傾向ごとに2問の平均を0〜100%にする。
+   駒の%は棋譜の数字を「6駒で一番低い駒=0%、一番高い駒=100%」に並べ直したもの。
+   あなたと各駒の%を、それぞれ50%からのズレ(プラス/マイナス)に直し、その向きがどれだけ似ているか(コサイン類似度)で比べる。
+   似ている度合いが一番高い駒が結果。どの駒もほぼ同じ割合で出るよう、小さな補正(bias)を足している。 */
 function score(){
  const sum=[0,0,0,0,0],n=[0,0,0,0,0];
  Q.forEach((q,k)=>{const a=ans[k];sum[q.a]+=q.r?6-a:a;n[q.a]++;});
- const u=sum.map((s,k)=>s/n[k]);
- const dist=p=>Math.sqrt(P[p].v.reduce((s,v,k)=>s+(u[k]-v)**2,0));
- const ranked=[...ORDER].sort((a,b)=>(dist(a)**2-P[a].bias)-(dist(b)**2-P[b].bias));
- const fit=p=>Math.round(100-dist(p)/Math.sqrt(80)*100);
+ const u=sum.map((s,k)=>(s/n[k]-1)/4*100);
+ const uc=u.map(x=>x-50),nu=Math.hypot(...uc)||1e-9;
+ const sim=p=>{const pc=P[p].v.map(x=>x-50);return uc.reduce((s,x,k)=>s+x*pc[k],0)/nu/Math.hypot(...pc);};
+ const ranked=[...ORDER].sort((a,b)=>(sim(b)+P[b].bias)-(sim(a)+P[a].bias));
+ const fit=p=>Math.round((sim(p)+1)/2*100);
  return {u,ranked,fit};
+}
+const MBTI=["INTJ","INTP","ENTJ","ENTP","INFJ","INFP","ENFJ","ENFP","ISTJ","ISFJ","ESTJ","ESFJ","ISTP","ISFP","ESTP","ESFP"];
+let myMbti="";
+function mbti(){
+ app.innerHTML=`<div class="qno">任意の質問</div>
+ <h2 class="q">あなたのMBTI(16タイプ)を知っていたら教えてください。</h2>
+ <p class="note">駒とMBTIの関係を調べるためのアンケートです。診断結果には影響しません。</p>
+ <div class="actions">${MBTI.map(m=>`<button class="ghost" data-m="${m}">${m}</button>`).join("")}</div>
+ <div><button class="primary" id="skip">わからない・答えない</button></div>`;
+ app.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{myMbti=b.dataset.m;result();});
+ document.getElementById("skip").onclick=()=>{myMbti="";result();};
 }
 function result(){
  const {u,ranked,fit}=score();const key=ranked[0],t=P[key],pr=P[t.pair],second=P[ranked[1]];
- track("quiz_complete",{piece:key});
- const pct=x=>Math.round((x-1)/4*100);
+ track("quiz_complete",{piece:key,mbti:myMbti||"none"});
+ const pct=x=>Math.round(x);
  const text=`私は「${t.name}」タイプでした。${t.catch}。相性がいいのは${pr.name}。 #チェス駒診断`;
  app.innerHTML=`<div class="eyebrow">診断結果</div>
  <section class="card" aria-label="診断結果カード">
@@ -265,7 +280,7 @@ function result(){
    <div><h3>本気になる時期</h3><p>${t.phase}。${t.name}の動きが一番多い局面です。</p></div>
    <div><h3>あなたの5つの傾向</h3>
     <div class="axes">${AX.map((a,k)=>`<div><div class="axis-top"><span>${a.lo}</span><b>${a.name} ${pct(u[k])}%</b><span>${a.hi}</span></div>
-     <div class="track"><div class="fill" style="width:${pct(u[k])}%"></div><div class="mark" style="left:${pct(t.v[k])}%" title="${t.name}の値"></div></div></div>`).join("")}</div>
+     <div class="track"><div class="fill" style="width:${pct(u[k])}%"></div><div class="mark" style="left:${t.v[k]}%" title="${t.name}の値"></div></div></div>`).join("")}</div>
     <div class="legend"><span><i style="background:var(--board-dark)"></i>あなた</span><span><i style="background:var(--accent)"></i>${t.name}</span></div>
    </div>
    <div class="pair"><div class="g" aria-hidden="true">${t.g}${pr.g}</div><div><h3>相性のいい駒: ${pr.name}</h3><p>${t.pairWhy}</p><p class="note">この組み合わせは「${t.set}」のキーホルダーになっています。</p></div></div>
@@ -285,10 +300,12 @@ function result(){
   </tbody></table></div>
   <p class="note">合計: ${AX.map((a,k)=>{const s=Q.reduce((t,q,j)=>q.a===k?t+(q.r?6-ans[j]:ans[j])-3:t,0);return `${a.name} ${s>0?"+":""}${s}点→${pct(u[k])}%`;}).join(" / ")}</p>
  </details>
- <details><summary>この診断のしくみ(なぜこの5つの傾向なのか)</summary>
-  <p class="note" style="margin-top:8px">2026年の大会棋譜82,329局で、駒ごとの動きを数えました。そのうち「駒によって差がはっきり出る数字」で、かつ「人の性格に置き換えて自分で答えられるもの」を5つ選んでいます。</p>
-  <ul class="why">${AX.map(a=>`<li><b>${a.name}</b>(${a.lo}⇔${a.hi}): ${a.src}から。${a.ex}。</li>`).join("")}</ul>
-  <p class="note" style="margin-top:8px">「チェックメイトを決める割合」も候補でしたが、攻めっ気とほぼ同じ駒(クイーンとルーク)が高くなるため外しました。「どの局面で一番動くか」は10問では測りきれないため、結果の「本気になる時期」で紹介しています。あなたの5つの傾向と、各駒の5つの数字が一番近い駒が結果になります。</p>
+ <details><summary>この診断のしくみ</summary>
+  <p class="note" style="margin-top:8px">2026年の大会棋譜82,329局で、駒ごとの動きを数えました。下の表の数字を、6駒の中で一番低い駒を0%、一番高い駒を100%として並べ直したのが、各駒の%です。</p>
+  <div class="tbl"><table class="bd"><thead><tr><th>傾向(元の数字)</th>${ORDER.map(p=>`<th>${P[p].g}</th>`).join("")}</tr></thead><tbody>
+  ${AX.map((a,k)=>`<tr><td>${a.name}<br><span class="note">${a.src}</span></td>${ORDER.map(p=>`<td class="n">${P[p].v[k]}%<br><span class="note">${a.raw[p]}${a.unit}</span></td>`).join("")}</tr>`).join("")}
+  </tbody></table></div>
+  <p class="note" style="margin-top:8px">あなたの%は、各傾向2問の回答から出しています。あなたと駒の%を「50%からどちらにどれだけ寄っているか」で比べ、その形が一番似ている駒が結果になります。</p>
  </details>
  <p class="note">このカードをスクリーンショットして、ストーリーズやXでシェアできます。</p>
  <div class="actions">
